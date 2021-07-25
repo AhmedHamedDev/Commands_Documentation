@@ -1,0 +1,44 @@
+python -m venv C:\Users\t-amhamed\Desktop\Python\Django Project
+
+py -m venv venv
+py -m venv django-project-name
+
+.\Scripts\activate
+
+ctrl + shift + p
+
+pip install django
+
+django-admin startproject core .
+django-admin startproject meeting-planner
+
+python manage.py runserver
+
+python manage.py startapp website
+
+python manage.py showmigrations
+
+python manage.py migrate  
+
+python manage.py makemigrations 
+
+python manage.py createsuperuser
+t-amhamed, ahmed_168199600
+
+pip install django-cors-headers
+
+pip install django-extensions
+
+INSTALLED_APPS = (
+    ...
+    'django_extensions',
+    ...
+)
+
+./manage.py shell_plus --print-sql
+
+{
+    "title": "python django",
+    "content": "this is python django content",
+    "author_id":1
+}
