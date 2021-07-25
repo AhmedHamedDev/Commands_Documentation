@@ -1,0 +1,918 @@
+// for help: add -- help (ls --help, su --help)
+# man 1 passwd 				: manual for that command
+# man 5 passwd 				: Special files (usually found in /dev)
+# man -k "print files"		: all commands that can do this
+# man -k print | grep 1		: just commands not special files
+
+
+# su - root					: switch user to root
+# su - t-amhamed			: switch user to normal user named t-amhamed
+
+# pwd						: Present Working Directory (/home/t-amhamed, /root)
+
+# date						: current date
+# hostname					: return the current hostname
+# cal						: calender (cal 2020)
+
+# ls						: list all directories
+# ls -l						: (long listing) one at a line
+# ls -a						: show all include hidden files - hidden files starts with (.) (.dbus, .esd_auth)
+# ls -l -a					: one at aline and show hidden
+# ls -h /home				: list what is at home
+# ls -lr					: alph recursevly بترتب الحروف بالعكس
+# ls -lt					: arrange files based on time stamp
+# ls -R						: folders and its content
+# ls ~						: for home list
+
+# cat .bash_history			: show all commands that i enterd (saved in this file)
+# hisory					: show all commands that i enterd 
+# !88						: show me command number 88
+# !-10						: show me command number 10 from the end
+# !ls						: the most recent ls command
+# history -c				: clear history from buffer only not from file
+
+# file /home				: tell u the type (Ascii file, directory, ...)
+# wc /etc/passwd 			: show number of lines , words and characters
+
+# cat command (cat >file_name)		: It is used to create the file with content.
+# cat /etc/passwd					: show the content of the file
+# head -n 5 /etc/passwd				: show first 5 lines
+# tail -n 5 /etc/passwd				: show last 5 lines
+
+# cd /var		: change directory
+# cd .. 		: up one lvl
+# cd ~ 			: go to root 
+# cd ~ahmed 	: go to ahmed home directory (/home/ahmed)
+# cd - 			: go to previous directory (like <- in windows)
+
+// note any file start with . like (.names) is a hidden file
+
+# touch command (touch file_name)	: It is used to create a file without any content.
+# mkdir directory_name				: make new directory
+# mkdir -p /dir1/dir2/dir3			: make sub directories
+
+# cp file1 file2					: copy content of file1 to file2
+# cp file1 folder1/folder2			: copy file to folder2
+# cp file1 file2 folder1/folder2	: copy two files to folder2
+# cp -r /etc folder1/folder2		: copy directory to directory
+# cp -r /etc/* folder1/folder2		: copy the content of etc directory to folder2 directory
+
+# mv file1 file2					: rename file1 to file2
+# mv file1 file2 /folder1			: move the two files to folder1
+
+# rm filename						: remove file
+# rm filename1 filename2 filename3
+# rm *.pdf							: remove all pdf files
+# rm -f filename					: force remove without confirmation
+# rm -f a*							: remove all files start with a and without confirmation
+# rm -d dirname						: remove empty directory
+# rmdir dirname						: remove empty directory
+# rm -rf dirname					: remove non empty directory with all files on it
+# rm -r dirname1 dirname2 dirname3
+
+
+// wild card
+// An asterisk (*) – matches one or more occurrences of any character, including no character.
+// Question mark (?) – represents or matches a single occurrence of any character.
+// Bracketed characters ([ ]) – matches any occurrence of character enclosed in the square brackets. It is possible to use different types of characters (alphanumeric characters): numbers, letters, other special characters etc.
+# ls -lr f*						: list all files start with f
+# rm f*							: remove all files start with f
+# ls l?st.sh					: lost.sh, list.sh, ....
+# ls l[abdcio]st.sh				: list.sh, lost.sh, last.sh, ...
+# ls ??st*
+# ls [clst]*
+# ls [clst][io]?t*
+# ls users-[0-9][a-z0-9][0-9]*
+# ls [!a]*						: only file names where first char is not "a"
+# ls [!a]						: only file name that have only one char and not a
+# ls file[^a-c]					: any name start with file and then one char that is not a, b, c
+
+
+# echo "ahmed"					: print ahmed
+# echo "1 + 2 = $(1+2)"			: print 1 + 2 = 3
+# echo ~ahmed					: /home/ahmed
+# echo "today is $(date)"
+
+# df -h							: show all partitions
+
+--------------------------------------------------------------
+
+=> Standard Input, Standard Output, Standard Error
+
+// ( > )   : add out put to file
+// ( >> )  : append output to file
+// ( 2> )  : add error to file
+// ( 2>> ) : append error to file
+// ( &> )  : add both output and error to file
+// ( &>> ) : append both output and error to file
+
+# date > /temp/saved-timestamp
+# tail -n 100 /var/log/dmesg > /temp/last-100
+# cat file1 file2 file3 > /temp/all-three-files
+# find /etc -name passwd 2> /temp/errors
+# echo "new line" >> /temp/many-lines
+# find /etc -name passwd &> /temp/save-both
+
+
+---------------------------------------------------------------
+
+=> constructing pipe lines: Pipe is used to combine two or more commands, and in this, the output of one command acts as input to another command, and this command’s output may act as input to the next command and so on. 
+
+# ls -l /user/bin | less
+# ls | wc -l > /temp/how-many-files
+# ls -t | head -n 10 > /temp/ten-last-changed-files
+# ls -l | tee /tmp/saved-output
+
+----------------------------------------------------------------
+
+=> Editing files
+
+# vim file1 
+# gedit file1
+# nano file1
+
+
+/////////////////////////////////////////////////////////////////////////////
+
+// The Linux Directory Structure
+
+= Mounting 	: is the attaching of an additional filesystem to the currently accessible filesystem of a computer. ... For example, to access the files on a CDROM, the user must inform the system to make the filesystem on the CDROM appear in some directory, typically /mnt/cdrom (which exists for this very purpose).
+= /div/null : is like a resycle bin
+
+1-  / 	      — The Root Directory                  : Everything on your Linux system is located under the / directory, known as the root directory. You can think of the / directory as being similar to the C:\ directory on Windows — but this isn’t strictly true, as Linux doesn’t have drive letters. While another partition would be located at D:\ on Windows, this other partition would appear in another folder under / on Linux.
+2-  /boot     — Static Boot Files                   : The /boot directory contains the files needed to boot the system 
+3-  /dev      — Device Files                        : Linux exposes devices as files, and the /dev directory contains a number of special files that represent devices. These are not actual files as we know them, but they appear as files — for example, /dev/sda represents the first SATA drive in the system. If you wanted to partition it, you could start a partition editor and tell it to edit /dev/sda.
+4-  /etc      — Configuration Files                 : The /etc directory contains configuration files, which can generally be edited by hand in a text editor. Note that the /etc/ directory contains system-wide configuration files — user-specific configuration files are located in each user’s home directory.
+5-  /lib      — Essential Shared Libraries          : The /lib directory contains libraries needed by the essential binaries in the /bin and /sbin folder. Libraries needed by the binaries in the /usr/bin folder are located in /usr/lib.
+6-  /mnt      — Temporary Mount Points              : Historically speaking, the /mnt directory is where system administrators mounted temporary file systems while using them. For example, if you’re mounting a Windows partition to perform some file recovery operations, you might mount it at /mnt/windows. However, you can mount other file systems anywhere on the system.
+7-  /proc     — Kernel & Process Files              : similar to the /dev directory because it doesn’t contain standard files. It contains special files that represent system and process information.
+8-  /tmp      — Temporary Files                     : Applications store temporary files in the /tmp directory. These files are generally deleted whenever your system is restarted and may be deleted at any time by utilities such as tmpwatch.
+9-  /var      — Variable Data Files                 : The /var directory is the writable counterpart to the /usr directory, which must be read-only in normal operation. Log files and everything else that would normally be written to /usr during normal operation are written to the /var directory. For example, you’ll find log files in /var/log.
+10- /lib      — Essential Shared Libraries          : Each Linux file system has a lost+found directory. If the file system crashes, a file system check will be performed at next boot. Any corrupted files found will be placed in the lost+found directory, so you can attempt to recover as much data as possible.
+11- /cdrom    — Historical Mount Point for CD-ROMs  : The /cdrom directory isn’t part of the FHS standard, but you’ll still find it on Ubuntu and other operating systems. It’s a temporary location for CD-ROMs inserted in the system. However, the standard location for temporary media is inside the /media directory.
+12- /bin      — Essential User Binaries             : The /bin directory contains the essential user binaries (programs) that must be present when the system is mounted in single-user mode. Applications such as Firefox are stored in /usr/bin, while important system programs and utilities such as the bash shell are located in /bin. The /usr directory may be stored on another partition — placing these files in the /bin directory ensures the system will have these important utilities even if no other file systems are mounted. The /sbin directory is similar — it contains essential system administration binaries.
+13- /home     — Home Folders                        : The /home directory contains a home folder for each user. For example, if your user name is bob, you have a home folder located at /home/bob. This home folder contains the user’s data files and user-specific configuration files. Each user only has write access to their own home folder and must obtain elevated permissions (become the root user) to modify other files on the system.
+14- /media    — Removable Media                     : The /media directory contains subdirectories where removable media devices inserted into the computer are mounted. For example, when you insert a CD into your Linux system, a directory will automatically be created inside the /media directory. You can access the contents of the CD inside this directory.
+15- /opt      — Optional Packages                   : The /opt directory contains subdirectories for optional software packages. It’s commonly used by proprietary software that doesn’t obey the standard file system hierarchy — for example, a proprietary program might dump its files in /opt/application when you install it.
+16- /root     — Root Home Directory                 : The /root directory is the home directory of the root user. Instead of being located at /home/root, it’s located at /root. This is distinct from /, which is the system root directory.
+17- /run      — Application State Files             : The /run directory is fairly new, and gives applications a standard place to store transient files they require like sockets and process IDs. These files can’t be stored in /tmp because files in /tmp may be deleted.
+18- /sbin     — System Administration Binaries      : The /sbin directory is similar to the /bin directory. It contains essential binaries that are generally intended to be run by the root user for system administration.
+19- /selinux  — SELinux Virtual File System         : If your Linux distribution uses SELinux for security (Fedora and Red Hat, for example), the /selinux directory contains special files used by SELinux. It’s similar to /proc. Ubuntu doesn’t use SELinux, so the presence of this folder on Ubuntu appears to be a bug.
+20- /srv      — Service Data                        : The /srv directory contains “data for services provided by the system.” If you were using the Apache HTTP server to serve a website, you’d likely store your website’s files in a directory inside the /srv directory.
+21- /usr      — User Binaries & Read-Only Data      : The /usr directory contains applications and files used by users, as opposed to applications and files used by the system. For example, non-essential applications are located inside the /usr/bin directory instead of the /bin directory and non-essential system administration binaries are located in the /usr/sbin directory instead of the /sbin directory. Libraries for each are located inside the /usr/lib directory. The /usr directory also contains other directories — for example, architecture-independent files like graphics are located in /usr/share.
+
+/////////////////////////////////////////////////////////////////////////////
+
+=> Manage users and groups
+
+# ps -aux 	 : show me all running proccess of root
+
+// note : any file you created has an owner and any proccess should be run under each user permission
+// note : when user created a group also created with the same user name
+// note : system-config-user is a gui to manage users and groups
+
+==> User types
+1- Root (like an admin): stronger than admin, can do anything, but SE Linux can prevent him
+2- Service User: in the past, any proccess can be run using root permission, but its not secure, so every process should be run using a service user ( FTP-SMTP-SETP ), service user has nologin so no hacks any more
+3- Normal User: system does not relize the user type, but it deals with them using UID
+
+// UID root = 0
+// UID service = 1 -999
+// UID normal user = 1000 - more
+
+# useradd         			: add a user to the system.
+# userdel         			: delete a user account and related files.
+# passwd          			: to change password
+# groupadd        			: add a group to the system.
+# groupdel        			: remove a group from the system.
+# usermod         			: modify a user account.
+# groupmod        			: modify a group.
+# chage           			: change user password expiry information.
+# sudo            			: run one or more commands as another user (typically with superuser permissions).
+# Relevant files  			: /etc/passwd (user information), /etc/shadow (encrypted passwords), /etc/group (group information) and /etc/sudoers (configuration for sudo).
+# which		      			: is a command which is used to locate the executable file associated with the given command by searching it in the path environment variable.
+# which sudo      			: on a terminal. If this command returns the absolute path of the associated file (typically /usr/bin/sudo), it means that the package is installed. Otherwise, you can install it with (yum install sudo)
+# id 			  			: show all current user info
+# chage -l abeer  			: show abber info ang manibulate
+# touch /etc/skel/new_file	: any file i add to this path will be automatically add to home directory of each new user
+
+=> Note: to use root privelage as a user u need to add user to /etc/sudeors file and use sudo before command
+1- visudo : to open file at vim
+2- press i to insert
+3- Add (username  ALL=(ALL) ALL) in th file
+4- press esc to end edit mode 
+5- shift = zz to exit vim
+6- switch to new user
+7- try (sudo useradd fahmy)
+
+# useradd ahmed                 			: add new user
+# groupadd hr		      					: add new hr group
+# passwd t-amhamed              			: to change user password when u r root
+# usermod t-amhamed -u 1200     			: to change user UID
+# usermod t-amhamed -G hr       			: add user to hr group
+# usermod t-amhamed -aG sales   			: add user to another group
+# usermod t-amhamed -s /use/sbin/nologin  	: to lock user
+# usermod t-amhamed -s /bin/bash 			: to unlock user
+# which t-amhamed
+# which nologin
+
+# tail -3 /etc/passwd 		: file that contain users and their UID 
+# tail -3 /etc/shadow 		: file that contain users passwords encripted  
+# tail -3 /etc/group  		: file that contain groups
+# tail -3 /var/log/secure 	: file that contins all security logs 
+
+(ahmed:x:1000:1000:ahmed:/bin/bash)
+(name:pwd:UID:GID:GECOS:Shell type)
+
+
+////////////////////////////////////////////////////////////////////////////////////
+
+=> File Permissions
+
+--------------------
+
+1- Sympolic Method :
+
+-> Ownership
+1- User
+2- Group
+3- Other
+
+-> Permissions
+1- Read 	 (r)
+2- Write	 (w)
+3- Execute	 (x)
+4- No permission (-)
+
+-> (+, -, =) => (for add, remove, set exactly)
+
+--> Read
+-rw-rw-r--
+(-) 	first dash means file
+(rw-)	user can read and write and not execute
+(rw-)	group can read and write and not execute
+(r--)	other can only read
+
+drwxr-xr-x
+(d) 	this is directory
+(rwx)	user can read and write and execute
+(r-x)	group can read and execute not write
+(r-x)	other can read and execute not write
+
+# ll file_name 		   			: to show file permissions
+# chmod u+r,g+w,o+x filename 	: add read to user, add write to group and execute to other
+# chmod go-rw file1				: remove read and write from group and other
+# chmod u=rw,g=r,o=r file1		: resets all old permission to this
+
+----------------------------
+
+2 - Numeric Method: r=4, w=2, x=1
+
+# chmod 754 file1  			: (rwx,r-x,r--)
+# chmod 400 file1			: (r--,---,---)
+# chmod -R 755 dir1			: change the directory with its content (R means recursve)
+
+
+-------------------------------
+
+=> Change file/directory user or group ownership:
+	- Only root can change the ownership of a file.
+	- Root or the file's owner can change group ownership.
+
+# chown ali dir1			: used to change owner of a dir
+# chown ahmed:media test 	: if u want to change owner and group for a file
+# chgrp admin test			: change group of file "test" to "admin"
+# chown -R abeer:sales dir1 : change for directory and its content recursevly
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
+=> Special Permissions 		: (set user permission - setuid - setgid - sticky bit)
+
+=> setuid (set user id): is applied only on files - means that a user can execute a command using root permission if user has a "setuid" permission
+
+# ll /usr/bin/passed
+-rws r-x r-x (passwd file has a setuid permission) so any user can't access the command but can do that if he has a setuid permission (means he can do that using root permission) 
+
+# chmod u+s script1 		: add set user id permission to file - run the script by the permission of its owner
+# find / -perm /4000		: find all files that has setuid permission
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
+=> Setgid (set group id)
+
+= instead of running a script with a user permission, you can it using group permission
+= user has a shared folder ( and only one user can access it - but we need other group member access it )
+= so we give to this folder a setgid permission to enable others to access it
+
+# chmod g+s /home/salwa/data
+# chown :sales /home/salwa/data
+# chgr Sales /home/salwa/data
+
+//////////////////////////////////////////////////////////////////////////////////////////
+
+=> Sticky bit
+
+= suppose you have a permission on directory (w) but you don't have a write permission on files under this folder
+= but you can delete them easily, so we gonna resolve it by giving a directory a sticky bit permission, means that others can't delete this directory or its files
+
+# chmod o+t dir1 
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+// process : is a program which is being executed - any process may create a child process. all processes are descendants of the first system process
+// if the parent process stop the child will stop too
+
+# echo $$ 							: to see the PID of your current shell process
+# ps 								: (Process Status) Shows the processes for the current shell
+# ps -aux							: a -> all processes attached to a terminal, u -> provides more column, x -> all other processes
+# ls /proc/							: all process are at this file
+# ps -aux | grep 264				: which shown in /proc
+# pidof vim 						: show process id for vim
+# ps -l 							: to display parent pid 
+# ps -ef							: to display parent pid and nice value
+# pstree							: process status tree
+# ps fax 							: process status tree
+
+= process in brackets (usually at the top) are scheduled kernal threads
+
+= Real time process monitoring: 
+# uptime
+# top
+# grep "model name" /proc/cpuinfo
+
+// PID		: the process id
+// User		: the process owner
+// Virt		: ( virtual memory ) all memory the process is using including swap
+// RES		: ( resident memory ) the physical memory used by the process
+// TIME		: cpu time, the total processing time since the process started
+
+# gnome-system-monitor 				: gui tool to manage processes
+
+----------------------------------------------------------
+= Killing Processes
+
+# kill -l							: list all signals
+# man 7 signal
+
+1- SIGHUP							: Causes the process to re-read the configuration file
+9- SIGKILL							: Should be used with caution
+15- SIGTERM							: The default
+
+# pidof vim
+# kill 4123
+# kill -9 7073
+# pkill vim
+# killall vim
+
+----------------------------------------------------------
+= Managing Process Priorities:
+- Processes are scheduled according to priority
+- negative values are allowed only to root
+
+# ps l								: to show nice values
+
+- the nice command is used to start a process with a user defined priority
+# nice vim text &					: default is 10  -  [1] 9182
+# nice -n 15 vim text &
+
+# renice 19 9182					: is used to change priority of a current running process
+
+----------------------------------------------------------
+= Controlling Jobs: background processes display a question mark (?) in the TTY column in a ps aux command.
+
+# sleep 10000 & 				: running a job in the background
+# jobs 							: [1]+ Running sleep 10000 &
+# fg %1							: bring it from background to forground
+# bg %1							: to restart the process in the background
+
+///////////////////////////////////////////////////////////////////////////////
+
+=> Managing Services
+
+# systemctl --type service 			: list all services on system
+# systemctl status sshd				: show service status
+# systemctl stop sshd				: stop service
+# systemctl start sshd				: start service
+# systemctl enable sshd				: enable service at startup - also it creates a shortcut for a service under systemd to be able to start on startup
+# systemctl is-active sshd
+# systemctl reload					: reload config file without restart the service
+# systemctl restart sshd 			: disconnect all active connections using ssh
+# echo $? 							: if return 0 then there was no errors
+
+= Unit Dependencies : means that a service has a dependencies
+
+# systemctl list-dependencies cups 	: list all dependencies
+
+= Masking Services  : RHEL replaces old services with a new one like (network service), so u should stop this service to avoid any conflict
+
+# systemctl stop network  			:
+# systemctl  mask network 			: mask option means that if anyone want to run (network) service, it creates a symlink from /etc/systemd/system/network-service to /dev/null 
+يعنى اى حد هيحاول يشغلها ال path
+بتعها هيروح على ال null
+زى ال recycle bin
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+=> Network Management
+
+# ifconfig 	: to know network configuration
+
+= network card starts with "en" means that it's eathernet
+= network card starts with "wl" means that it's wirless lan
+= network card starts with "o" means that it's card built in mother board
+= network card starts with "p" means that it's network card connected to PCI Slot
+= network card starts with "s" means that hot hotplug spotd
+
+
+// to change IP:
+# ifconfig
+# ip addr show
+# ip link show 													: show me statistics about network card - MTU -MAC
+# ifconfig eno77 192.168.1.117 netmask 255.255.255.0			: not recommended way to add ip (overide the existing ip) - (not permenent it will go on restart)
+# ip addr add dev eno333 10.0.0.5/24							: add new ip as a secondary ip	(not permenent it will go on restart)
+
+ 
+= so network card ip changed to 192.168.1.117 and then once you types another ip using ip add, it created a secondary ip (10.0.0.5)
+= but the above commands are obsolute, means that if you restarted the machine evey thing is lost
+= so you should manage network using "nmcli" tool to manage network service and it created a config network file
+
+# nmtui   														: (network manager cli) to open tool
+
+= once u editing using the tool, u should restart network service, and enable w disable for network card 
+
+# systemctl restart NetworkManager
+# nmcli con down eth0
+# nmcli con up eth0
+# nmcli con mod eth0 connection.autoconnect no					: turn off auto connection
+# nmcli con mod eth0 ipv4.dns 8.8.8.8							: configure a dns server
+# nmcli con mod eth0 +ipv4.dns 4.2.2.3							: add another dns server
+# nmcli con mod eth0 +ipv4.address 10.0.0.1/24					: add a secondary address
+# nmcli con mod eth0 ipv4.method manual ipv4.address 192.168.1.10/24 ipv4.gateway 192.168.1.1 ipv4.dns 8.8.8.8
+
+= how to edit network configuration file, but then you should restart service, then enable w disable network card
+
+# vim /etc/sysconfig/network-scripts/ifcfg-eth0
+
+// network tools
+# ping -c 3 10.0.0.1
+# netstat -i 													: show all opened ports
+# traceroute 2.2.2.2
+
+# nm-connection-editor 											: GUI version of nmcli
+
+--------------------------------------------------------
+
+= Configure HostName
+// the static host name is stored in /etc/hostname
+
+# hostname
+# vim /etc/hostname
+# hostnamectl													: display info about the system
+# hostnamectl set-hostname www.egcode.comand					: set hostname 
+
+---------------------------------------------------------
+
+= Configure Routing
+
+# route -n														: display routing table
+# ip route														: display routing table
+# ip route show 												: display routing table
+# ip route add 20.0.0.0/8 via 192.168.1.1						: add a static route
+# nmcli con mod eth0 ipv4.gateway 192.168.1.1					: add getway
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+=> Installing and updating packges
+
+
+// RPM (Red Hat Package Manager) is an default open source and most popular package management utility for Red Hat based systems like (RHEL, CentOS and Fedora). The tool allows system administrators and users to install, update, uninstall, query, verify and manage system software packages in Unix/Linux operating systems. 
+// The RPM formerly known as .rpm file, that includes compiled software programs and libraries needed by the packages. This utility only works with packages that built on .rpm format.
+
+
+= Install : It is used to install any RPM package.
+= Remove  : It is used to erase, remove or un-install any RPM package.
+= Upgrade : It is used to update the existing RPM package.
+= Verify  : It is used to verify an RPM packages.
+= Query   : It is used query any RPM package.
+
+
+# rpm --checksig pidgin-2.7.9-5.el6.2.i686.rpm
+# rpm -ivh pidgin-2.7.9-5.el6.2.i686.rpm 			: Install an RPM Package 
+		-i : install a package
+		-v : verbose for a nicer display
+		-h : print hash marks as the package archive is unpacked.
+
+# rpm -qpR BitTorrent-5.2.2-1-Python2.4.noarch.rpm	: check dependencies of RPM Package before Installing
+		-q : Query a package
+		-p : List capabilities this package provides.
+		-R: List capabilities on which this package depends..
+
+# rpm -q BitTorrent								: check an Installed RPM Package
+# rpm -ql BitTorrent							: List all files of an installed RPM package
+# rpm -qa --last								: List Recently Installed RPM Packages
+# rpm -qa										: List All Installed RPM Packages
+# rpm -Uvh nx-3.5.0-2.el6.centos.i686.rpm		: Upgrade a RPM Package
+# rpm -evv nx									: Remove a RPM Package
+# rpm -ev --nodeps vsftpd						: Remove an RPM Package Without Dependencies
+# rpm -qf /usr/bin/htpasswd						: Query a file that belongs which RPM Package
+# rpm -qi vsftpd								: Query a Information of Installed RPM Package
+# rpm -qip sqlbuddy-1.3.3-1.noarch.rpm			: Get the Information of RPM Package Before Installing
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+=> YUM is a tool to install software and packages - also it checks for all packages dependencies
+-  YUM idea : ( client-server based )
+
+// client should access a repo server to download packages - also u should create a config file to tell the client to goto repo server
+// path : cd/etc/yum.repos.d/
+
+= Repo server : 
+1- install vsftpd package 
+2- start for service/enable
+3- Disable firewalld service
+
+= Client 
+1- create config file /etc/yum.repos.d/server.repo
+
+# vim local.repo
+[local]
+name = locally
+baseurl = file:///media/Packages
+enable=1  (file is enabled as a repo file)
+gpgcheck=0
+
+# yum -y install epel-release
+# yum -y install epel-repo
+# yum list all ( check for all installed packages )
+# yum repolist ( check all repo list )
+# yum install system-config-kickstart
+# yum remove system-config-kickstart
+# yum search httpd
+# yum -y system-config-kickstart (disable interactive)
+# yum info bash (info)
+
+
+= enable gpgcheck
+
+# vim /etc/yum.repos.d/local.repo
+gpgcheck = 1
+gpgkey=file:///etc
+
+///////////////////////////////////////////////////////////////////////////////
+
+=> ssh
+
+- the first time a user uses ssh to connect to a particular server, the ssh command stores the
+  server's public key in the usesrs ~/.ssh/know_hosts file. Evey time the user connects after that,
+  the client makes sure it gets the same public key from the server by comparing the servers entry in
+  the ~/.ssh/know_hosts file to the public key the server sent. if the keys do not match, the client 
+  assumes that the network traffic is being hijacked or that the server has been compromised, and 
+  breaks the connection.
+  
+- Host keys are stored in /etc/ssh/ssh_host_key * on the ssh server.
+  
+# systemctl status sshd
+# rpm -qa | grep -i ssh
+# yum search sshd
+# ssh-keygen								: Default is RSA
+# ssh-keygen -t dsa							: to generate public and private key using dsa
+# ssh-keygen -t rsa							: to generate public and private key using rsa which is better
+# ssh 192.168.1.10
+# ssh abeer@192.168.1.10
+# ssh abeer@192.168.1.10 hostname
+# exit
+# who										: to see who is connect on me
+
+-------------------------------------------------------------------------
+
+= ssh key-based authontication:
+
+- in the event the private key is stolen, it is very difficult for someone other than the issuer to use it when protected with a passphrase.
+- when the key is copied to another system using ssh-copy-id, it copies the ~/.ssh/id_rsa.pub fil default
+
+# ssh-copy-id 192.168.1.10
+# ssh-copy-id abeer@192.168.1.10
+# ssh-copy-id -p 2020 abeer@192.168.1.10
+# ssh-copy-id -i ~/ssh/id_rsa.pub abeer@192.168.1.10
+
+--------------------------------------------------------------------------
+
+= customize ssh service configuration:
+
+# vim /etc/ssh/sshd_config
+# Port 22									: changes the default portion
+# PermitRootLogin yes 						: prohibit the root user from logging in using ssh
+# PasswordAuthentication yes				: prohibit password authontication using ssh
+
+///////////////////////////////////////////////////////////////////////////////
+
+=> System Logging
+
+= there are 3 services that are responsable for creating system logs
+
+1- Direct Write ( Apache service )   	: service that collect logs related to apache server
+2- Journald (logs system on booting) 	: service that collect logs while system is starting up
+3- rsyslogd 			     			: (/var/log) service collect normal logs like ( security - mail - yum ) - user wrote wrong password - ingo-query /var/log/secure
+
+---------------------------------------
+
+1 - Journald
+
+# yum search journald
+# systemctl status systemd-journald
+
+// to open journal log
+# journalctl -n 5 : show me last 5 line
+# journalctl -f   : show real time log
+
+// Each log has 2 factors ( priority - facility )
+	- Facility means : services that were logged
+	- Priority : 0 - emerg   - means that system is un usable
+		     1 - alert   - means alert action must be taken immediatly
+		     2 - crit    - means critical condition
+		     3 - err     - means non critival error condition
+		     4 - warning - means warning condition
+		     5 - notice  - means normal but significant event
+		     6 - info    - means informational event
+		     7 - debug   - means debugging lvl event
+
+	- larger number means no critical issue
+
+# journalctl -p err 								: filter output to specific severity
+# journalctl  -b									: show me error logswhile systems was booting
+# journalctl --since Yesterday 						: get yesterday logs
+# journalctl --since yesterday --until 9:00:00
+
+# journalctl _PID=1									: show me systemctl logs
+# journalctl _UID=0									: show me root logs
+# journalctl _SYSTEMD_UNIT=sshd 					: show me logs for sshd
+
+
+# cat /etc/systemd/journald.conf					: modify conf file for journald		
+
+// journald logs saved in temp directory - but we can create a directory to save journald on it
+
+= on server
+# mkdir /var/log/Journal
+# chown root:systemd-journal /var/log/Journal
+# chmod 2755 /var/log/Journal
+# reboot
+
+// and after all, we discovered that some logs shall be lost, since journal logs file should not exceed 10% from var size
+
+# last 												: to see the users that logged on system
+
+----------------------------------------------
+
+2 - rsyslogd : important for admins
+
+# yum search rsyslogd
+# yum status rsyslogd
+
+= log locates ar /var/log and u can find many logs related to sabma, yum and so on mail
+= /var/log/secure show us authentication log for user
+
+-----------------------------------------------
+
+= log file rotation
+
+// log file rotation is feature that enable us to compress large many logs into one log with data
+// log1 - log2 - log3 -----> log-2215383
+// cron is responsible for this, means that using cron, a sechdualed task shall be created to automatic the compression proccess
+
+# vim /etc/logrotate.conf : rotate runs every week, and compress 4 files into one
+# vim /etc/logrotate.d
+
+
+-----------------------------------------------
+
+= Logger
+
+// using logger comand, you can send logs to any servers with facility and serverity
+// on server : tail -f /var/log/messages
+// on server : # logger -panic "be careful"
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+=> Accessing file System
+
+= everything is a file, so any device is represented by a file
+# cd /dev
+
+= to know mounted file systems
+# df -h
+
+= you can mount a device under more than directory
+
+-- Mount using block id --
+// every partition has a uuid (block id)
+# blkid
+# mount /media
+
+-----------------------------------------------------------
+
+= Links
+
+1 - Soft Links ( shortcuts )  : is a pointer that points to file name #ln -s /etc/test
+2 - hard link  ( data block ) : is a pointer that points to data block file #ln /etc/test.txt Test-HL.txt
+
+-- Using Hard Link --
+
+// every partition has an inode table
+// inode table stores info about "Inode number-permissions-owner-creation time-access time-modification time" for every file
+// inode table is created once u formatted your partition on file system
+// inode number points to only 128 byte of a file size - and other portion will be assigned to another Inode number - and u can access the file using the first inode number
+
+= to know the inode id 
+# ll -i file.txt
+
+= to create hard link for a file
+# ln file.txt file-hl.txt
+# ll -i file.txt file-hl.txt 		: you can see that all files have the same inode number
+
+// note : hard links can be made on one partition - if u delete on of files, another once is still accessable
+  
+
+-- Using soft Link --
+
+# ln -s File.txt File-Sl
+// but recommended you should define the full path
+
+# ln -s /root/file.txt /root/file-sl.txt
+
+// both file and soft link has different inode number
+
+
+-- Searching for files --
+
+1 - whereis 		: search for both conf-bin files
+2 - whatis  		: search for info about file
+3 - which   		: search for bin file dir only
+4 - locate  		: is a tool used to search file -bases on db, so u should run #updatedb before locating any file
+# updatedb			: locate depend on database so we need to update it
+# locate file1.txt
+
+5- Find : mush better than locate - does not depend on db - you can search file with specific permissions-owner-group
+
+# find / -name file1
+# find / -user ahmed		: search file owned by user
+# find / -group IT		: search file with group
+# find / -name "*.txt"
+# find / -size 4m 		: search files based on size
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+=> Create archive files and directories with tar ( tap archive ) :
+
+# tar cvf archive.tar file1 file2 file3					: add files to archive.tar
+# tar tf archive.tar									: see archive files
+# tar xvf archive.tar									: extract files out of archive
+# tar xvf archive.tar -C /var/data						: extract files out of archive at selected location
+# du -hs /etc/etc										: disk useable - show the size of directory
+# ll -h etc.tar
+ 
+= c 		: create an archive
+= f			: file name (file name of the archive to operate on)
+= v			: verbosity - useful to see which files get added to or extracted from the archive
+
+// Notes:
+= before creating a tar archive, verify that there is no other archive in the directory with the same name as the new archive to be created. the tar command will overwrite an existing archive without any feedback.
+= for tar to be able to archive the selected files, it is mandatory that the user executing the tar command is able to read the files.
+= while tar stores ownership and permissions of the files, there are other attributes that are not stores in the tar archive by default, such as the SELinux context and ACLs. to store those extended attributes in the tar archive, hte --xattrs option is required when creating an archive.
+
+-----------------------------------------------------------------------
+
+= create a compressed tar archive:
+
+# tar cvzf etc.tar.gz /etc/
+# tar cvzf etc.tgz /etc/
+
+- z for gzip compression (filename.tar.gz or filename.tgz)
+- j for bzip2 compression (filename.tar.bz2)
+- J for xz compression (filename.tar.xz)
+
+= extract a compressed tar archive:
+
+# tar xvzf etc.tar.gz
+# tar xvjf etc.tar.bz2
+# tar xvJf etc.tar.xz
+
+- Note : Listing a compressed tar archive works in the same way as listing an uncompressed tar archive.
+
+------------------------------------------------------------------------
+
+= compress and extract files:
+
+# gzip file.text
+# gunzip file.text.gz
+
+# bzip2 file.text
+# bunzip2 file.text.bz2
+
+# xz file.text
+# unxz file.text.xz
+
+// Note: compressing a file will delete it by default
+
+# gzip -c file.text > file.gz									: will not delete the file
+
+///////////////////////////////////////////////////////////////////////////////////
+
+= Copying Files Between Systems Securely:
+
+# scp test_file 192.168.1.1:~
+# scp -P 2200 test_file 192.168.1.1:~
+# scp 192.168.1.1:/home/test-file /home/abeer
+# scp root@192.168.1.1:/etc/hosts ~
+# scp -r root@192.168.1.1:/var/log /tmp 						: copy recursively
+
+---------------------------------------------------------------
+
+= Synchronizing Files Between Systems Securely:
+
+# rsync test_file 192.168.1.1:~
+# rsync 192.168.1.1:/home/test_file /home/abeer
+# rsync root@192.168.1.1:/etc/hosts ~
+# rsync -rvz file2 root@192.168.1.1:/root/file
+
+-r, --recursively
+-v, --verbose
+-z, --compress													: during transfer
+
+//////////////////////////////////////////////////////////////////////////////////////
+
+=> KVM : Kernal-based virtual machine
+
+# cat /proc/cpuinfo
+
+= vmx : for intel based processor
+= svm : for AMD based processor
+
+# lsmod | grep kvm					: to check if the kvm module is available
+# systemctl status libvirtd
+# ip link show
+
+= virbo0 							: virtual bridge (embeded switch)
+
+# arch
+
+= x86_64							: to support virtualization , you need a 64 bit kernal
+
+------------------------------------------------------------------
+
+=> virtual manager ( GUI TOOL )
+
+# yum -y install kvm libvirt virt-manager qemu-kvm
+# virt-manager
+
+= Applications > system tools > virtual machine manager
+
+# dd if=/dev/cdrom of=/root/rhel7.iso				: create an iso file
+
+-------------------------------------------------------------------
+
+# virsh 											: cli tool
+# virsh list										: list all running virtual machines
+# virsh list --all									: list all virtual machines
+# virsh destroy rhel7.1								: stop the machine
+# virsh start rhel7.1								: start the machine
+
+///////////////////////////////////////////////////////////////////////////
+
+=> VNC : (Remote desktop)
+
+///////////////////////////////////////////////////////////////////////////
+
+=> FTP : for upload and download
+
+// you can open it on browser and explore files
+// default port 21
+// pub path : /var/ftp/
+
+# yum install ftp
+# yum install vsftpd
+# yum start vsftpd
+# yum enable vsftpd
+
+# ftp 192.168.0.1
+- Name: anonymous
+- Password: 
+
+# ftp> ls
+# lcd /home/user/yourdirectoryname 					: to change download directory
+# get file											: to download the file
+# mget *.xls										: To download several files we can use wildcards
+# put file											: To upload a file
+# telnet 172.22.82.149 21							: to check connection
+# exit
+
+////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+

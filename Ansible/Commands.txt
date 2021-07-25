@@ -1,0 +1,299 @@
+=> Ansible
+
+# yum -y install epel-release
+# yum -y install epel-repo
+# yum -y install ansible
+
+# vim /etc/hosts														: define each server (ip  hostname)
+# touch hosts															: add inventory file
+
+-------------------------
+= Inventory file
+-------------------------
+
+[control]
+master
+
+[webservers]
+client1
+
+[database]
+client2
+
+[webstack:children]
+webservers
+database
+
+-------------------------
+
+# ssh-keygen															: at each server
+# ssh-copy-id client1													: copy key of each server
+
+# ansible localhost -m command -a hostname
+
+= go to hosts file folder
+# ansible webservers -i hosts -m command -a hostname
+
+# ansible webservers -i hosts --become -m yum -a "name=httpd state=present" 
+# ansible database -i hosts --become -m yum -a "name=mysql state=present"
+# ansible database -i hosts --become -m service -a "name=mysql state=started"
+
+= --become					: run command as root
+= yum, service				: which module
+= httpd, mysql				: name of package
+= present					: will simply ensure that a desired package is installed
+
+# ansible-playbook -i hosts -K playbook1.yml
+
+------------------------
+= playbook.yml
+------------------------
+
+- hosts: webservers
+  become: yes
+  vars:
+    http_port: 8000
+	https_port: 4443
+	html_welcome_msg: "hello from ahmed hamed"
+  tasks:
+  
+    - name: ensure httpd is at the latest version
+	  yum:
+	    name: httpd
+		state: latest
+		
+	- name: add config file
+	  template:
+	    src: webtest.conf.j2
+		dest: /etc/httpd/conf.d/webtest.conf
+		
+	- name: add html file
+	  template:
+	    src: index.html.j2
+		dest: /var/www/html/index.html
+		
+	- name: restart httpd
+	  service:
+	    name: httpd
+		state: restarted
+
+---------------------------------------------------
+= separate some logic in another yaml file
+---------------------------------------------------
+
+- hosts: webservers
+  become: yes
+  vars:
+    http_port: 8000
+	https_port: 4443
+	html_welcome_msg: "hello from ahmed hamed"
+  tasks:
+  
+	- include_tasks: tasks/apache2_install.yml
+	
+----------------------------------------------------
+= Roles
+----------------------------------------------------
+# ansible-galaxy init roles/common				: will create folders and files
+
+- hosts: webservers
+  become: yes
+  vars:
+    http_port: 8000
+	https_port: 4443
+	html_welcome_msg: "hello from ahmed hamed"
+  roles:
+	- common
+	- apache2
+	
+- hosts: proxy
+  become: yes
+  roles:
+	- common
+	- nginx
+	
+-----------------------------------------------------
+= Loop
+-----------------------------------------------------
+
+- name: "Install common packeges"
+  yum: name={{ item }} state=latest
+  with_items:
+    - pydf
+	- tree
+	- open-vm-tools
+	
+-----------------------------------------------------
+= Remove File
+-----------------------------------------------------
+
+- name: Remove defaults
+  file: 
+    path: /etc/nginx/sites-enabled/default
+	state: absent
+
+-----------------------------------------------------
+= include : yaml file include another one
+-----------------------------------------------------
+
+// at main.yml
+
+- include: install_packages.yml
+- include: configure_nginx.yml
+
+-----------------------------------------------------
+= Notify : when something change run this task
+-----------------------------------------------------
+
+- name: Deploy nginx sites configuration
+  template: src=mysite.j2 dest="/etc/nginx/sites-enabled/mysite"
+  notify: restart nginx
+  
+// at handlers folder (main.yml)
+
+- name: restart nginx
+  service: name=nginx state=restarted
+  
+------------------------------------------------------
+= Tags
+------------------------------------------------------
+// you can add tags to each play
+// you can add tags to each task
+// you can add more than one tag
+// you can run more than one tag
+// special tag (always) will run every time
+
+# ansible-playbook -i hosts -K playbook1.yml --tags web
+# ansible-playbook -i hosts -K playbook1.yml --tags configuration
+# ansible-playbook -i hosts -K playbook1.yml --tags web,configuration
+
+=====================
+- hosts: webservers
+  become: yes
+  roles:
+	- common
+	- apache2
+  tags: web
+	
+- hosts: proxy
+  become: yes
+  roles:
+	- common
+	- nginx
+  tags: proxy
+======================
+- name: Remove defaults
+  file: 
+    path: /etc/nginx/sites-enabled/default
+	state: absent
+  tags: configuration, delete
+======================
+- name: restart httpd
+  service:
+	name: httpd
+    state: restarted
+  tags: always
+ 
+ ---------------------------------------------------------
+ = Variables
+ ---------------------------------------------------------
+ 1- ansible facts
+ 2- user defined
+ 
+ # ansible -i hosts webservers -m setup											: show all facts for webservers group
+
+======================================
+ => at configfile.j2
+ 
+ # this configuration in for {{ ansible_facts['nodename'] }}
+ 
+ upstream webservers{
+	
+	{% for host in groups['webservers'] %}
+		server {{ hostvars[host]['ansible_facts']['nodename'] }}:8000
+	{% endfor %}
+ 
+	# server client1:8000
+	# server client2:8000
+ }
+ 
+======================================
+ => user defined vars
+ 
+ - create folder named (group_vars) inside it a folder named (all) inside it a yaml file with any name (common variables)
+
+    http_port: 8000
+	https_port: 4443
+	html_welcome_msg: "hello from ahmed hamed"
+	
+ - another folder (host_vars) with yaml file with server name (client1.yml) to overide common vars at this server
+ 
+ 	html_welcome_msg: "hello special message"
+
+ - at index.html.j2
+ 
+ <html> 
+	<h1>{{ html_welcome_msg }} </h1>
+ </html>
+ 
+ - at playbook (without vars section)
+ 
+   hosts: webservers
+   become: yes
+   roles:
+	 - common
+	 - apache2
+	 
+---------------------------------------------------------
+=> Dev / prod Environment
+---------------------------------------------------------
+
+- Will create two inventory files.
+
+[control]
+master
+
+[webservers]
+client1
+
+[database]
+client2
+ 
+[all:vars]
+myenvironment=development
+
+=============================
+
+[control]
+master
+
+[webservers]
+client1
+
+[database]
+client2
+ 
+[all:vars]
+myenvironment=production
+ 
+=============================
+ - at index.html.j2 we can use vaiables in inventory
+ 
+ <html> 
+	<h1>{{ myenvironment }} </h1>
+ </html>
+=============================
+
+# ansible-playbook -i inventories/dev -K playbook1.yml
+# ansible-playbook -i inventories/prod -K playbook1.yml
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 

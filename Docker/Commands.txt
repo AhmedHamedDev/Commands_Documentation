@@ -1,0 +1,395 @@
+=> What is a container ?
+- a way to package application with all the necessary dependencies and configuration
+- portable artifact, easily shared and moved around
+- makes development and deployment more efficient
+
+- Layers of images
+- Mostly Linux Base Image, because small in size
+- Application image on top
+
+=======================================================
+
+=> Where do containers live?
+- Container Repository
+- Private Repository
+- Public Repository 	( DockerHub )
+
+=======================================================
+
+=> After Containers
+- Own isolated environment
+- Packaged with all needed configuration
+- One command to install the app
+- Run same app with 2 different versions
+- Developers and Operations work together to package the application in a container
+- No environment configuration needed on server , except Docker Runtime
+
+========================================================
+
+=> Docker Image
+- the actual package
+- artifacts, that can be moved around (configuration, application, start script)
+- not running
+- consist of layers (almost each command on dockerfile is a layer)
+- at building an image layers are cached to be faster next time
+
+=> Docker Container
+- actually start the application
+- container environment is created
+- running
+
+- is a running environment for image
+- container only a live as the process inside it is alive after it end the container exit 
+- virtual file system
+- port binded: talk to application running inside of container
+
+========================================================
+
+=> Docker VS Virtual Machine
+- vm abstract os kernal and application layers
+- docker abstract application layer only and work on ( host kernal )
+- linux based docker containers can't work on windows host ( before windows 10 ) ( docker toolbox fix this problem )
+- size: Docker image much smaller
+- speed: Docker containers start and run much fast
+- Compatibility: Vm of any os can run on any os host
+
+========================================================
+
+=> Docker Engine
+- consist of ( Docker Deamon, Rest Api, Docker Cli )
+- we can use cli to run command on another machine docker engine
+
+# docker -H=remote-docker-engine:2375
+# docker -H=10.123.2.1:2375 run nginx
+
+=> Namespace - PID
+- Each process in linux host take an id starting from id = 1
+- each container act as a child system so inside it process id start from 1 put the same process on host will found with different id
+- all process run on the same host put separated using namespaces
+- ex: redis at container (pid=1) = redis at host (pid=16)
+
+=> cgroups
+# docker run --cpu=.5 ubuntu
+# docker run --memory=100m ubuntu
+
+========================================================
+
+# docker ps															: list all containers running
+# docker ps	-a														: list all containers running and stopped
+# docker inspect <container_id>										: get additional information about the container
+# docker images														: to list all images
+# docker pull redis													: will pull the image from reposatory
+# docker stop <container_id>										: to stop the container
+# docker start <container_id>										: to start the container
+# docker run postgres:9.6											: pull image and start postgres container 9.6 version
+# docker run -d redis												: will run the container in detached mood
+# docker run -p <host_port>:<container_port> -d redis				: to bind host port to container port (-p6000:6079, -p6001:6079)
+# docker run --name redis-older redis:4.0							: to give a name to the container and use it instead of id
+# docker run -d -e USERNAME=ADMIN -e PASSWORD=123 mongo				: to configure environment variabls
+# docker logs <container_id>										: to see the container logs
+# docker exec -it <container_id> /bin/bash							: to enter the container and execute commands 
+	- see virtual file system
+	- not all linux command available
+	- # env  : to see all environment variables
+	- # exit : to get out
+# docker exec -it <container_id> /bin/sh							: shell
+# docker rm <container_id>											: to remove container
+# docker rmi <image_id>												: to remove image
+# docker tag <image_id> <tag_name_you_want>							: to change image tag
+
+
+========================================================
+=> Docker Network
+
+= Default Networks:
+1- Bridge: by default container attach to it, containers can access each other but (need host binding to access them from outside the host)
+# docker run ubuntu
+
+2- none : container is isolated from every thing
+# docker run ubuntu --network=none
+
+3- host : container is using the host port (can make only one container from each image so that host port not conflict)
+# docker run ubuntu --network=host
+
+4- overlay
+5- ingress
+
+# docker network ls			
+# docker inspect mongo-network																	: list all docker networks
+# docker network create mongo-network															: create docker network
+# docker run --net mongo-network mongo															: to add the container to specific docker network
+# docker network create --drive bridge --subnet 182.18.0.0/16 custom-isolated-network
+
+= Container Port vs Host Port
+- Multiple containers can run on your host machine ( with same port )
+- your laptop has only certain ports available
+- conflict when same port on host machine
+- we need to bind different host port to each container
+
+- Note: if containers are in the same docker network they can access each other by container name only
+
+=========================================================
+
+=> Docker Compose
+- instead of running long and many docker commands to start/stop/create/remove containers and networks 
+- we create a yaml file with all configuration
+
+version: '3'
+services: 
+  mongodb:															: will be container name with prefix and postfix 
+    image: mongo													: docker image for container
+	ports:															: port bind (host:container)
+	 - 27017:27017
+	environment:													: environment variables
+	 - MONGO_INITDB_ROOT_USERNAME=admin
+	 - MONGO_INITDB_ROOT_PASSWORD=password
+  mongo-express:
+    image: mongo-express
+	ports:
+	 - 8080:8081
+	environment:
+	 - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
+	 - ME_CONFIG_MONGODB_ADMINPASSWORD=password
+	 - ME_CONFIG_MONGODB_SERVER=mongodb
+
+------------------------------------------------
+
+version: 2
+services:
+	redis:
+		image: redis
+		networks:
+			- back-end
+	db:
+		image: postgres:9.4
+		networks:
+			- back-end
+	vote:
+		image: voting-app
+		networks:
+			- front-end
+			- back-end
+		depends_on:
+			-redis
+	result:
+		image: result
+		networks:
+			- front-end
+			- back-end
+networks:
+	front-end:
+	back-end:
+
+# docker-compose -f mongo.yaml up									: will create a container to each service and a docker network to contain the containers
+# docker-compose -f mongo.yaml down									: will stop and remove the containers and network
+	 
+=========================================================
+
+=> Dockerfile
+- use to create an image
+- every time something change delete old image and build new one
+- every image is based on another image
+- filename must be (Dockerfile)
+
+# docker build -t <image_name>:<tag> <dockerfile_path>				: to build an image (docker build -t my-app:1.0 .)
+
+= Image Naming :
+	- registryDomain/imageName:tag 
+	- default is dockerhub => docker pull mongo:4.2 == docker.io/library/mongo:4.2
+	- repo.treescale.com/ahmedhamed/redis:latest
+
+----------------------------------------------------------
+
+= Node dockerfile
+
+FROM node
+ENV MONGO_DB_USERNAME=admin \
+	MONGO_DB_PASSWORD=password
+RUN mkdir -p /home/app
+COPY ./home/app
+CMD ["node","server.js"]
+
+----------------------------------------------------------
+
+= .Net Core dockerfile
+
+FROM mcr.microsoft.com/dotnet/core/runtime:2.1-stretch-slim AS base
+WORKDIR /app
+
+
+FROM mcr.microsoft.com/dotnet/core/sdk:2.1-stretch AS build
+WORKDIR /src
+COPY ["GeneralRouter/GeneralRouter.csproj", "GeneralRouter/"]
+COPY ["MessageQueuer/MessageQueuer.csproj", "MessageQueuer/"]
+COPY ["ObjectPool/ObjectPool.csproj", "ObjectPool/"]
+COPY ["MessageQueuingTechnologyContract/MessageQueuingTechnologyContract.csproj", "MessageQueuingTechnologyContract/"]
+COPY ["Models/Models.csproj", "Models/"]
+COPY ["EFG.GeneralLibs.Enumerations/EFG.GeneralLibs.Enumerations.csproj", "EFG.GeneralLibs.Enumerations/"]
+RUN dotnet restore "GeneralRouter/GeneralRouter.csproj"
+COPY . .
+WORKDIR "/src/GeneralRouter"
+RUN dotnet build "GeneralRouter.csproj" -c Release -o /app
+
+FROM build AS publish
+RUN dotnet publish "GeneralRouter.csproj" -c Release -o /app
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app .
+ENTRYPOINT ["dotnet", "GeneralRouter.dll"]
+
+--------------------------------------------------------------
+
+1- FROM
+
+# FROM <image>
+# FROM <image>:<tag>
+# FROM <image>@<digest>
+
+- FROM must be the first non-comment instruction in the Dockerfile.
+- FROM can appear multiple times within a single Dockerfile in order to create multiple images. Simply make a note of the last image ID output by the commit before each new FROM command.
+- The tag or digest values are optional. If you omit either of them, the builder assumes a latest by default. The builder returns an error if it cannot match the tag value.
+
+2- RUN
+
+# RUN <command> (shell form, the command is run in a shell, which by default is /bin/sh -c on Linux or cmd /S /C on Windows)
+# RUN ["<executable>", "<param1>", "<param2>"] (exec form)
+
+- Run commands on container environment
+- The exec form makes it possible to avoid shell string munging, and to RUN commands using a base image that does not contain the specified shell executable.
+- The default shell for the shell form can be changed using the SHELL command.
+- Normal shell processing does not occur when using the exec form. For example, RUN ["echo", "$HOME"] will not do variable substitution on $HOME.
+
+3- CMD
+
+# CMD ["<executable>","<param1>","<param2>"] (exec form, this is the preferred form)
+# CMD ["<param1>","<param2>"] (as default parameters to ENTRYPOINT)
+# CMD <command> <param1> <param2> (shell form)
+
+- EX: docker run ubuntu-sleeper sleep 10 (sleep 10 will override the docker file cmd)
+- The main purpose of a CMD is to provide defaults for an executing container. These defaults can include an executable, or they can omit the executable, in which case you must specify an ENTRYPOINT instruction as well.
+- There can only be one CMD instruction in a Dockerfile. If you list more than one CMD then only the last CMD will take effect.
+- If CMD is used to provide default arguments for the ENTRYPOINT instruction, both the CMD and ENTRYPOINT instructions should be specified with the JSON array format.
+- If the user specifies arguments to docker run then they will override the default specified in CMD.
+- Normal shell processing does not occur when using the exec form. For example, CMD ["echo", "$HOME"] will not do variable substitution on $HOME.
+
+4- EXPOSE
+
+# EXPOSE <port> [<port> ...]
+
+- Informs Docker that the container listens on the specified network port(s) at runtime.
+- EXPOSE does not make the ports of the container accessible to the host.
+
+5- ENV
+
+# ENV <key> <value>
+# ENV <key>=<value> [<key>=<value> ...]
+
+- The ENV instruction sets the environment variable <key> to the value <value>.
+- The value will be in the environment of all “descendant” Dockerfile commands and can be replaced inline as well.
+- The environment variables set using ENV will persist when a container is run from the resulting image.
+- The first form will set a single variable to a value with the entire string after the first space being treated as the <value> - including characters such as spaces and quotes.
+
+6- COPY
+
+# COPY <src> [<src> ...] <dest>
+# COPY ["<src>", ... "<dest>"] (this form is required for paths containing whitespace)
+
+- Copies new files or directories from <src> and adds them to the filesystem of the image at the path <dest>.
+- <src> may contain wildcards and matching will be done using Go’s filepath.Match rules.
+- <src> must be relative to the source directory that is being built (the context of the build).
+- <dest> is an absolute path, or a path relative to WORKDIR.
+- If <dest> doesn’t exist, it is created along with all missing directories in its path.
+
+7- ENTRYPOINT
+
+# ENTRYPOINT ["<executable>", "<param1>", "<param2>"] (exec form, preferred)
+# ENTRYPOINT <command> <param1> <param2> (shell form)
+
+- EX: docker run ubuntu-sleeper 10 (there is the command on docker file without argument)
+- if you didn't give an argument error will raise
+- to avoid error user CMD with ENTRYPOINT ( ENTRYPOINT["sleep"] CMD ["5"] ) will work as default value
+- Allows you to configure a container that will run as an executable.
+- Command line arguments to docker run <image> will be appended after all elements in an exec form ENTRYPOINT and will override all elements specified using CMD.
+- The shell form prevents any CMD or run command line arguments from being used, but the ENTRYPOINT will start via the shell. This means the executable will not be PID 1 nor will it receive UNIX signals. Prepend exec to get around this drawback.
+- Only the last ENTRYPOINT instruction in the Dockerfile will have an effect.
+
+8- ADD
+
+# ADD <src> [<src> ...] <dest>
+# ADD ["<src>", ... "<dest>"] (this form is required for paths containing whitespace)
+
+- Copies new files, directories, or remote file URLs from <src> and adds them to the filesystem of the image at the path <dest>.
+- <src> may contain wildcards and matching will be done using Go’s filepath.Match rules.
+- If <src> is a file or directory, then they must be relative to the source directory that is being built (the context of the build).
+- <dest> is an absolute path, or a path relative to WORKDIR.
+- If <dest> doesn’t exist, it is created along with all missing directories in its path.
+
+9- WORKDIR
+
+# WORKDIR </path/to/workdir>
+
+- Sets the working directory for any RUN, CMD, ENTRYPOINT, COPY, and ADD instructions that follow it.
+- It can be used multiple times in the one Dockerfile. If a relative path is provided, it will be relative to the path of the previous WORKDIR instruction.
+
+=========================================================
+
+=> Private Docker Repository (treescale)
+# docker login repo.treescale.com
+- username: ahmedhamed
+- password: 
+- change image tag to (repo.treescale.com/ahmedhamed/redis)
+- # docker tag <image_old_name> <image_new-name>											: tag == rename
+- # docker push repo.treescale.com/ahmedhamed/redis:latest
+- # docker pull repo.treescale.com/ahmedhamed/redis:latest
+
+Note: each image consist of layers when pull the image it pulls the missing layers only 
+
+
+=> Deploy Private Registry
+- Registry is provided as a docker image you can use it
+
+# docker run -d -p 5000:5000 --name registry registry:2
+# docker image tag my-image localhost:5000/my-image
+# docker push localhost:5000/my-image
+# docker pull localhost:5000/my-image
+# docker pull 192.168.56.100:5000/my-image
+
+=========================================================
+
+=> Docker Volumes
+
+- docker virtual file system is removed every time you restart it
+- so we mount a directory on host (physical) to a directory on container (virtual) so data can be persist
+- we can add the same volume to many containers to share data 
+
+= Types of volumes:
+1- Host volumes: you decide where on the host file system the reference is made
+# docker run -v /home/mount/data:/var/lib/mysql/data (host:container)
+
+2- Anonymous volumes: for each container a folder is generated that gets mounted
+# docker run -v /var/lib/mysql/data (container)
+
+3- Named volumes: you can reference the volume by name, should be used in production
+# docker run -v name:/var/lib/mysql/data
+
+= at compose file
+version: '3'
+services: 
+  mongodb:															
+    image: mongo												
+	ports:															
+	 - 27017:27017
+	volumes:
+	 - db-data:/var/lib/mysql/data
+	environment:													
+	 - MONGO_INITDB_ROOT_USERNAME=admin
+	 - MONGO_INITDB_ROOT_PASSWORD=password
+volumes:
+  db-data
+  
+# docker volume ls															: list all volumes
+# docker volume create <volume_name>										: create a volume
+# docker volume inspect <volume_name>										: display detailed information 
+# docker volume rm <volume_name>											: remove specific volume 
+# docker volume prune														: remove all the unused volumes 

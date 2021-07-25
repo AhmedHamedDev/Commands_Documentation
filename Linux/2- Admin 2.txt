@@ -1,0 +1,341 @@
+=> Network File Sharing (NFS):
+
+- is a protocol that allows you to share directories and files with other Linux clients over a network. 
+- Shared directories are typically created on a file server, running the NFS server component. 
+- Users add files to them, which are then shared with other users who have access to the folder.
+- An NFS file share is mounted on a client machine, making it available just like folders the user created locally. 
+- NFS is particularly useful when disk space is limited and you need to exchange public data between client computers.
+
+# yum -y install nfs-utils								: Installing NFS Server
+# mkdir /mnt/myshareddir								: create the root directory of the NFS shares
+# chown nobody:nogroup /mnt/myshareddir 				: no-one is owner
+# chmod 777 /mnt/myshareddir 							: everyone can modify files
+
+- To grant access to NFS clients, we’ll need to define an export file. The file is typically located at /etc/exports
+- Edit the /etc/exports file in a text editor, and add one of the following three directives.
+	1- /mnt/myshareddir {clientIP}(rw,sync,no_subtree_check)										: To enable access to a single client
+	2- /mnt/myshareddir {clientIP-1}(rw,sync,no_subtree_check){clientIP-2}(...){clientIP-3}(...)	: To enable access to several clients
+	3- /mnt/myshareddir {subnetIP}/{subnetMask}(rw,sync,no_subtree_check)							: To enable access to an entire subnet
+	
+- rw 													: which enables both read and write
+- sync 													: which writes changes to disk before allowing users to access the modified file
+- no_subtree_check										: which means NFS doesn’t check if each subdirectory is accessible to the user
+
+# exportfs -a 											: making the file share available
+# systemctl restart nfs-kernel-server 					: restarting the NFS kernel
+
+- If you have a firewall enabled, you’ll also need to open up firewall access using the sudo ufw allow command.
+
+= mount export folder on client (Not Permanently)
+
+# sudo mkdir /var/locally-mounted
+# sudo mount -t nfs 192.168.20.100:/myshareddir /var/locally-mounted
+
+//////////////////////////////////////////////////////////////////
+
+=> Kickstart : automate linux installation
+
+# yum install -y system-config-kickstart
+# yum install -y vsftpd
+# systemctl start vsftpd
+# systemctl enable vsftpd
+# systemctl stop firewalld
+
+# system-config-kickstart								: to start the app and create and save ks.cfg file
+# ksvalidator /var/ftp/ks.cfg							: to validate the file
+
+= At the client side:
+
+// at the begining of the installation press tab:
+# ks=ftp://172.22.82.149/ks.cfg ip=172.22.82.150 netmask=255.255.240.0 gateway=192.268.1.254
+
+= ks=http://server/dir/file
+= ks=ftp://server/dir/file
+= ks=nfs:server:/dir/file
+= ks=hd:device:/dir/file
+
+///////////////////////////////////////////////////////////////////
+
+=> Writing regular expressions :
+- are a lanuage of their own, which means they have their own syntax and rules.
+- used with tools like grep, vim
+
+= Matching text with grip:
+
+# grep cat /usr/share/dict/words
+# grep ^cat /usr/share/dict/words						: start with 'cat'
+# grep cat$ /usr/share/dict/words						: end with 'cat'
+# grep ^cat$ /usr/share/dict/words						: exact 'cat
+# grep c.t /usr/share/dict/words						: . mean one character
+# grep ^c.t$ /usr/share/dict/words				
+# grep ^c[aou]t$ /usr/share/dict/words					: middle char is a or u or o
+# grep -e cat -e tale /usr/share/dict/words				: -e for many patterns
+# grep -r abeer /etc									: find pattern for all files in etc directory
+# grep -rl abeer /etc									: list all file names only
+# grep -r ^...$ /etc/
+
+-i  case insensitive
+-v 	reverse
+-r  recursive
+-n  number the lines
+-A3 Display 3 lines after the regular expression match
+-B3 Display 3 lines before the regular expression match
+-e  used for multiple search patterns
+
+# ps aux | grep root
+
+# echo hello world | tr a-z A-Z
+# echo hello world | tr [a-z] [A-Z]
+# echo hello world | tr [:lower] [:upper:]
+
+////////////////////////////////////////////////////////////////////////////
+
+=> Scheduling one-time tasks with at:
+
+# systemctl status atd									: installed and enabled by default
+# at 16:30
+at> logger "hello at 4:30 pm"
+at> ctrl + d
+
+# atq													: Query all at queues
+# at -l													: Query all at queues
+# atrm 1												: Remove job number 1
+# at -d 2												: Remove job number 2
+
+# at now +5min
+# at 12:07pm
+# at teatime tomorrow									: tea time is 16:00
+# at noon +4 days
+# at 5pm august 16 2016
+
+# ls /var/spool/at/ 									: holds the jobs script files
+# at -c 6												: Inspect the actual commands that will run when a job is executed
+
+= Note: unprivileged users can only see and control their own jobs. root can see and manage all jobs
+
+---------------------------------------------------------------------------------
+
+=> Scheduling Recurring Jobs with cron:
+
+# systemctl status crond								: installed and enabled by default
+# crontab -e											: vi editor will be started
+
+Minutes		Hours		Day-of-Month		Month		Day-of-week			Command
+
+= * for always
+= A number
+= x-y for a range
+= x,y for lists 
+= */x to indicate an i nterval of x 					: */7 in the minutes column will run a job exactly every seven minutes
+= Three-letter abbreviations can be used for both month and weekdays.
+= if the command contains an unescaped(%) that % will be treated as a newline, and everything after the % will be fed to the command on stdin.
+
+Ex:
+0		9		2		2		*		/usr/local/bin/yearly_backup
+*/7		9-16	*		jul		5		echo "chime"
+58		23		*		*		1-5		tar cf /root/etc.tar /etc
+
+# crontab -l											: list the jobs for the current user
+# crontab -r											: remove all jobs for the current users
+# crontab -e -u abber									: root can manage the jobs for another user
+# crontab												: stdin will be used
+# crontab <file_name>									: remove all jobs, and replace with the jobs read from <file_name>
+
+= Note: If the commands run from a cron job produce any output to either stdout or stderr that is not redirected, the crond daemon will attempt to email that output to the user owning that job. 
+
+# vim /etc/crontab                 						: Don't touch this file
+
+-----------------------------------------------------------------------------------
+
+=> Scheduling System cron Jobs:
+# vim /etc/crontab          							: not recommended to be used to schedule jobs
+# ls -d  /etc/cron.*        							: predefined jobs that run every hour, day, week, and month
+
+Note:
+- Make sure to make any scripts you place in these directories executable. 
+- The /etc/anacrontab file will make sure that important jobs will always be run, and not skipped accidentally because the system was turned off or hibernating.
+
+------------------------------------------------------------------------------------
+
+Managing Temporary Files:
+- In the past. system administrators used a tool called tmpwatch to remove old, unused tmp files.
+- In RHEL7 systemd will start systemd­tmpfiles-setup which is resposible for tmp files.
+- systemd-tmpfiles-clean.service will be started 15 minutes after systemd has started, and then once every 24 hours afterwards.
+- Files will be considered unused if timestamps(atime, mtime and ctime)are older than the systemd­tmpfiles age configuration. 
+- The stat command can be run on a file to see the values of all three of its time stamps.
+
+# systemd-tmpfiles --remove
+# vim /usr/lib/tmpfiles.d/tmp.conf    					: should not be edited by system administrator)
+= d /run/systemd/seats 0755 root root -
+= D /home/student 0700 student student 1d
+= L /run/fstablink - root root - /etc/fstab
+
+= /tmp is under systemd-tmpfiles control. To override the upstream settings:
+# cp /usr/lib/tmpfiles.d/tmp.conf /etc/tmpfiles.d/
+= Then change the interval from 10d to 5d.
+# systemd-tmpfiles --clean tmp.conf     (Test if systemd accepts the new configuration)
+
+//////////////////////////////////////////////////////////////////////////////////////
+
+=> Linux process scheduling and multitasking:
+- the way linux (and other operating systems) can actually run more processes is by employing a technique called time-slicing.
+- the part of the linux kernal that performs this switching is called the process scheduler.
+- there are exactly 40 different levels of niceness a process can have (-20 to 19).
+- by default, processes will inherit their nice level from their parent, which is usually 0.
+- Higher nice levels indicate less priority, while lower the nice level indicate a higher priority.
+- only root is allowed to set negative nice levels and lower the nice level on existing processes.
+- un privileged users are only allowed to set positive nice levels, and they are only allwoed to raise the nice level on their existing process, but cannot lower them.
+
+# gnome-system-monitor
+
+= Managing Process Priorities:
+- Processes are scheduled according to priority.
+- negative values are allowed only to root.
+- when a process is started, it will inherit the nice level from its parent.
+
+# ps l													: to show nice values
+# ps axo user,pid,nice,command
+# ps axo user,pid,command,nice --sort=nice 
+# ps axo user,pid,command,nice --sort=user
+
+= the nice command is used to start a process with a user defined priority
+# nice vim text &										: default is 10
+[1] 9182
+
+# nice -n 15 vim text &
+
+=the renice command is used to change the priority of a currently running process.
+# renice 19 9182										: 19 is the new value
+
+////////////////////////////////////////////////////////////////////////
+
+=> Access contol list:
+- ACL gives permissions to more than one user or group on a file or a directory.
+- ACL sets default permissions for newly created files and directories.
+- the file system needs to be mounted with ACL support enabled. XFS file systems have builtin ACL
+ support. Ext4 file systems created on RHEL7 have the acl option enabled by default, but ext4 file
+ systems c reatedin earlier versions of red hat enterprise linux may need the acl option included with
+ the mount request.
+ 
+# ls -l file.txt
+- the "+" at the end of the 10-character permission string indicates thet there are ACL settings associated with this file
+ 
+# getfacl file.txt										: get file access
+# getfacl .												: display ACL settings on the working directory
+ 
+# setfacl -m u:abeer:rw file.txt
+# setfacl -m o::rw file.txt
+# setfacl -m g:sales:rw dir1
+# setfacl -R -m g:sales:rw dir1
+# setfacl -x u:abeer file.txt
+# setfacl -b file.txt
+
+/////////////////////////////////////////////////////////////////////////////
+
+=> Basic SELinux security concepts (Security Enhanced Linux):
+
+- There are two types of security, DAC (discretionary access control) and MAC (mandatory access control)
+- A primary goal of SELinux is to protect user data from system services that have been compromised.
+- In SELinux, system is defined as subject (user, services) and object (files/folders, ports, socket)
+- A context is a lable on processes, files, and ports that determine access.
+- A boolean is a switch that enable/disables a set of policy rules.
+- There is a policy rule that permits Apache (the web server process running as httpd-t) to access 
+  files and directories with a context normally found in /var/www/html and other web server directories (http_sys_content_t).
+- There is no allow rule in the policy for files normally found in /tmp and /var/tmp, so access is not permitted.
+
+# id -Z
+# ps auxZ
+# ls -Z
+# netstat -Z
+
+= EX:
+= system_u:object_r:admin_home_t:s0
+= system_u												: User type				
+= object_r												: Role type
+= admin_home_t											: type
+= s0													: mls (multi level security), mcs (multi category security)
+
+
+------------------------------------------------------------------------
+
+= SELinux modes
+- Enforcing mode  : SELinux both logs and protects.
+- Permissive mode : used to trouble shoot issues. SELinux only logs.
+- Disable mode	  : completely disables SELinux.
+
+- No reboot is required to go from enforcing to permissive or back again.
+- A system reboot is required to disable SELinux entirely, or to get from disabled mode to enforcing or permissive mode.
+
+# getenforce
+# sestatus
+# setenforce 0											: permissive mode
+# setenforce 1											: enforcing mode
+# vim /etc/selinux/config
+
+-------------------------------------------------------------------------
+
+= Changing SELinux Contexts:
+- The context of the parent directory is assigned to the newly created file.
+
+# yum -y install httpd
+# systemctl start httpd
+# systemctl enable httpd
+# setenforce 0
+# vim /var/www/html/file.txt
+
+firefox>> http://127.0.0.1/file.txt
+
+# chcon -t test_t /var/www/html/file.txt
+# setenforce 1											: file now will not be accessible
+# restorcon -R /var/www/html/file.txt
+
+- File contexts will be changed back to their default context if the system's file systems are relabled at boot time.
+
+--------------------------------------------------------------------------
+
+= Monitoring SELinux violations:
+
+# rpm -qa | grep setroubleshoot
+# tailf /var/log/messages
+# sealert 
+
+//////////////////////////////////////////////////////////////////////////////
+
+=> static Ip Permenitly
+
+#  vi /etc/sysconfig/network-scripts/ifcfg-eth0
+
+= old
+
+DEVICE="eth0"
+ONBOOT=yes
+NETBOOT=yes
+UUID="41171a6f-bce1-44de-8a6e-cf5e782f8bd6"
+IPV6INIT=yes
+BOOTPROTO=dhcp
+HWADDR="00:08:a2:0a:ba:b8"
+TYPE=Ethernet
+NAME="eth0"
+
+= new
+
+HWADDR=00:08:A2:0A:BA:B8
+TYPE=Ethernet
+BOOTPROTO=none
+IPADDR=192.168.2.203
+PREFIX=24
+GATEWAY=192.168.2.254
+DNS1=192.168.2.254
+DNS2=8.8.8.8
+DNS3=8.8.4.4
+DEFROUTE=yes
+IPV4_FAILURE_FATAL=no
+IPV6INIT=no
+NAME=eth0
+UUID=41171a6f-bce1-44de-8a6e-cf5e782f8bd6
+DEVICE=eth0
+ONBOOT=yes
+
+////////////////////////////////////////////////////////////
+
+
