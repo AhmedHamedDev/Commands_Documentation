@@ -336,6 +336,8 @@ UUID=41171a6f-bce1-44de-8a6e-cf5e782f8bd6
 DEVICE=eth0
 ONBOOT=yes
 
+# systemctl restart network
+
 ////////////////////////////////////////////////////////////
 
 
