@@ -1,0 +1,11 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: hello-route
+spec:
+  host: hello-route-core.apps.stgocp.efg-hermes.local
+  to:
+    kind: Service
+    name: hello-service
+  port:
+    targetPort: 8080

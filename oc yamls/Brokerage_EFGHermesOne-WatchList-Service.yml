@@ -1,0 +1,82 @@
+parameters:
+- name: firstRun
+  default: true
+  type: boolean
+  displayName: First Run of this Pipeline
+trigger:
+  branches:
+    include:
+    - master
+variables:
+- name: solution
+  value: '**/*.sln'
+- name: buildPlatform
+  value: Any CPU
+- name: buildConfiguration
+  value: Release
+- name: ocp_token
+  value: eyJhbGciOiJSUzI1NiIsImtpZCI6IkdMcDZNeHJKNVJUR1FQdkdrb2t0eDl2bXV0cC1oTkdPRWZ2Y3FkYnRQVHMifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJlZmctaGVybWVzLW9uZS1zdGciLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlY3JldC5uYW1lIjoiYXp1cmUtZGV2b3BzLXRva2VuLXR6cWw0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQubmFtZSI6ImF6dXJlLWRldm9wcyIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6ImM1YzczNGZiLTUwNzYtNDA2Ni05OWU5LWJmNzk3ZDU1MGE2ZiIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDplZmctaGVybWVzLW9uZS1zdGc6YXp1cmUtZGV2b3BzIn0.L6w3znhZpok4ta_2j-SzAtLDSsmgDzvuTgf7iuBvU_GGlzTcNEUZe7gUEt6RHHYjxDeyLbT-AwydWDR-T_ex6LfDWGDF6AWzIAlmhiumPnnZva1FlxBkvopGhhvfawmdesvVl6k_6QFR4PbTZUbKTl4lhlS6zEdk-fCwp4OQZA7hKacEnOV6LDh81h_phvVZu8XhTn7_65-q4pPjvDenI2QXfabpDOWswuWe_jPu71h4NwWuW8_ws5bSAQajl0tsMthJjSLW_DXLZRVCx3i0yjflWF7vFTE6_RVeRLHidfsB4p3rSy_dQ9gPcEYlOernw7QV2Lhzy9ojcetMGi_g8HaRYzU4tqsJfNM65Ub3Qtp-RCgiRpncHlnk_4i04qJuM6MElX3Rtb77LzlKNnZxDhSujVCN8Ls-J-1UNSB6-XCqAA_7xldoZuNSzyvzhMYYPvFzcq9rzFaJhPfAUs9iSBy0zQidx0psspo-388TFLDc1gMPXvhpkM5ZOtf-49TovBImmKpLKfenFO0AAU-lmLekrz0cYMijU-CfmvW8nPEdmw3RxOo2OERRJdy1i2tja5h7mbkoGmW4oTl7-HcNyvgLUpjjoCS86GyXVUAZNxeBbyQHIaitpkkTYHAiNWUHOlZl5rNJwvX-12WLfL02PEyQFQ5i3dKAGpWpgcLVFQM
+- name: ocp_server
+  value: https://api.stgocp.efg-hermes.local:6443
+- name: proj_name
+  value: efg-hermes-one-stg
+- name: app_name
+  value: watchlist
+- name: app_folder
+  value: EFGHermes.One.WatchList.Service.Api
+stages:
+- stage: __default
+  jobs:
+  - job: Job
+    pool:
+      name: Pool-Brok
+    steps:
+    - task: CmdLine@2
+      displayName: Restore packages
+      inputs:
+        script: >
+          dotnet restore EFGHermesOneWatchListService.sln
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: publish
+        arguments: --configuration Release
+        projects: >
+          **\*.csproj
+
+          !**\docker-compose.dcproj
+    - task: PowerShell@2
+      displayName: Login to Openshift and select roject
+      inputs:
+        targetType: inline
+        script: >
+          oc login --token=$(ocp_token) --server=$(ocp_server) --insecure-skip-tls-verify=true
+
+          oc project $(proj_name)
+    - task: PowerShell@2
+      displayName: Deploying to OpenShift
+      condition: eq('True', true)
+      inputs:
+        targetType: inline
+        script: >
+          $ImageStreamExists = getoc  is/watchlist  --template='{{.status.dockerImageRepository}}'
+
+          if($ImageStreamExists -lt 0)
+
+          {
+              oc new-build --name=$(app_name) dotnet:5.0-ubi8 --binary=true
+              oc start-build $(app_name) --from-dir=$(System.DefaultWorkingDirectory)/$(app_folder)/bin/Release/net5.0/.
+              oc logs -f bc/$(app_name)
+              $ISURL = oc get is/watchlist  --template='{{.status.dockerImageRepository}}'
+              ((Get-Content -path deploy.json -Raw) -replace '__Image_stream_URL__',$ISURL) | Set-Content -Path deploy.json
+              Get-Content -path deploy.json
+              oc apply -f deploy.json
+          }
+
+          else
+
+          {
+              oc start-build $(app_name) --from-dir=$(System.DefaultWorkingDirectory)/$(app_folder)/bin/Release/net5.0/.
+              oc logs -f bc/$(app_name)
+              oc rollout restart deployment/watchlistapp
+          }
+

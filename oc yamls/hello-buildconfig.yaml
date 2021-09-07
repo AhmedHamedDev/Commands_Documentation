@@ -1,0 +1,29 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: hello-buildconfig
+  labels:
+    app: hello
+spec:
+  source:
+    type: Git
+    git:
+      ref: master
+      uri: https://azuredevops.efg-hermes.com/tfs/DefaultCollection/Brokerage%20Enterprise%20Suite/_git/Brokerage_FIX
+    contextDir: SampleApiToDeployOnOpenShift
+    sourceSecret:
+      name: "gitauth"
+  strategy:
+    type: Docker                      
+    dockerStrategy:
+      dockerfilePath: SampleApiToDeployOnOpenShift/Dockerfile
+      from:
+        kind: ImageStreamTag                   # Use an imagestream tag as 'FROM'
+        namespace: core                        # Which project?
+        name: hello-imagestream:latest         # Use the imagestream created above
+  output:
+    to:
+      kind: ImageStreamTag
+      name: hello-imagestream:latest
+  triggers:
+  - type: ImageChange                          # Trigger a build on image change

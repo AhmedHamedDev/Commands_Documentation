@@ -1,0 +1,17 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: hello-imagestream
+  namespace: core
+  labels:
+    app: hello
+spec:
+  lookupPolicy:
+    local: false
+  tags:
+  - name: latest
+    from:
+      kind: DockerImage
+      name: mcr.microsoft.com/dotnet/aspnet:5.0-buster-slim
+    referencePolicy:
+      type: Source
