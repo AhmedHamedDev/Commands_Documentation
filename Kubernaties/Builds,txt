@@ -1,1 +1,83 @@
-# builds
+=> Builds Stratigies
+
+1- Docker Build
+
+- we know that kubernetes expects a docker image of application , so we need the build process to convert your app into docker image
+- so we have to create docker file with set of instrucions, place it next to app code, run docker build command ---> docker build <path> 
+
+- Ex of Docker file  :-
+
+              From ubuntu:16.04
+              Run apt  -get update  && apt -get install -y ython python -pip
+              Run pip install Flask 
+              Copy app.py
+              Specify the entry point to run the app
+  
+  
+- and then when build job runs openshift automatically use that docker file to docker image and push it to internal docker registry		
+
+-YAML Config :- 
+
+          apiVersion: build.openshift.io/v1
+        kind: BuildConfig
+        metadata:
+          name: simple-webapp-docker
+        spec:
+          output:
+            to:
+              kind: ImageStreamTag
+              name: 'simple-webapp-docker:latest'
+          runPolicy: Serial
+          source:
+            git:
+              ref: master
+              uri: 'http://192.168.56.150/root/simple-webapp.git'
+            type: Git
+          strategy:
+            dockerStrategy:
+            type: Docker
+          triggers:
+            - imageChange:
+                lastTriggeredImageID: >-
+                  docker.io/centos/python-36-centos7@sha256:2dad2bffe6e1c9e74e4e71f2bd2ef883511231e9dae37c1cf7b3cdff6b64ca4e
+              type: ImageChange
+            - type: ConfigChange
+            - generic:
+                secret: d933479692089006
+              type: Generic
+            - github:
+                secret: 39d979c75bf3b77e
+              type: GitHub
+                                   ____________________________________________
+
+2- Source-To-Image (s2i)
+
+- its a openshift built in framework that takes yourapp source code and converts it into docker image without having to provide any docker files 
+- It uses a pre built say (.NET) builder image and ingect your code into it to create the image like what happen from (catalog)
+- so we have to create docker file with set of instrucions, place it next to app code, run docker build command ---> docker build <path> 
+                                  ____________________________________________
+3- custom builder 
+
+____________________________________________________________________________________________________________________________________________________________
+
+ => Build Configurations :- 
+  
+    Build Startegy :- [source - Docker - ..]
+    Source Repo :- Repo 
+    Source ref :- Say "Master"
+    Out put to :- [Image Stream] where docker image will be pushed 
+    Triggeres :- where we set the web hooks and fire events to auto build after any code changing  
+    Environment :-  from here we can select additional environment variables 
+    Event tag :- gives us a list of events associated with the build 
+
+
+
+
+
+
+
+
+
+
+
+
