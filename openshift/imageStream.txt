@@ -1,0 +1,20 @@
+We can clone our image from {
+   
+    -openshift registry
+    -dockerStrategy
+    -other registry
+  }
+
+so that image may be updated anytime , so a conflict to my code may occuring 
+so openshift provides ImageStream to provide a consistent refrencing technique for docker image ,
+now every time you clone that image you will get latest of same ImageStreamTag or image stream id 
+
+
+YAML of ImageStream :-
+
+{
+    apiVersion: image.openshift.io/v1
+    kind: ImageStream
+    metadata:
+    name: simple-webapp-docker
+}

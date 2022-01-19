@@ -1,0 +1,23 @@
+We need the builds to trigger automatically when making any changes into ur applicatio source code ,
+So when developer updates the code repo, code repo should send Msg to notify openshift to build 
+
+so when a message delivered too openshift what openshift do ? 
+    1- pull the code 
+    2- build docker image 
+    3-deploy new version of the app into target environment to make changes accessible to users 
+
+So how it works  ? 
+
+        we can do it using <webhooks> :- which i san event notifiation technique the sends http post request to a predefiend URL
+        when an event occurs such as code changed into [github, gitlab, bitbucket,..]
+
+- most of code repos such as [github, gitlab, bitbucket,..] come with built in support for webhooks 
+
+               * github - settings - configurations - send Url <webhook Url>
+               * gitlab-repo-settings-integration-paste url <webhook Url>
+
+that <webhook Url> comes from openshift webconsol-configurations - gethub webhook url
+notes :- 
+
+  * both instances of urls should be network accessible lets say both public 
+  * if local from getlab -----> uncheck  "enable ssl verification" and from settings allow local
